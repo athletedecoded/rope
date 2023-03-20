@@ -1,0 +1,11 @@
+# Dataset
+/mvor
+
+# Models
+*.tflite
+
+# pycache
+*__pycache__
+
+# predictions
+predictions.csv
