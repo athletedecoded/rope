@@ -1,11 +1,13 @@
 # Dataset
 /mvor
+mvor.tar.gz
 
 # Models
 *.tflite
 
 # pycache
 *__pycache__
+.DS_Store
 
 # Virtual Environment
 my_venv
