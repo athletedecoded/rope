@@ -6,6 +6,7 @@ import time
 import csv
 import cv2
 import glob
+import time
 
 from ml import MoveNetMultiPose
 
@@ -15,6 +16,12 @@ def run(tracker_type: str, detection_threshold: float) -> None:
         tracker_type: Type of Tracker('keypoint' or 'bounding_box').
         detection_threshold: Only keep images with all landmark confidence score above this threshold.
     """
+
+    # Define Variables
+    num_days = 4
+    num_cams = 3
+    latency = 0
+    total_frames = 0
 
     # Preprocess image paths
     MVOR_DIR = os.path.join(os.getcwd(),'mvor')
@@ -88,14 +95,19 @@ def run(tracker_type: str, detection_threshold: float) -> None:
         ]
         writer.writerow(headers)
 
-        for day_num in range(1,5):
-            for cam_num in range(1,4):
+        for day_num in range(1, num_days + 1):
+            for cam_num in range(1, num_cams + 1):
                 dir_path = os.path.join(MVOR_DIR,f'day{day_num}',f'cam{cam_num}','*png')
                 frames = glob.glob(dir_path)
                 for frame in frames:
                     img_name = frame.split('/')[-1]
                     img_id, ext = img_name.split('.')
                     image = cv2.imread(frame)
+
+                    # Record initial time and number of iterations
+                    init_time = time.time()
+                    total_frames += 1
+
                     # Flip across y axis (?)
                     image = cv2.flip(image, 1)
                     # Run pose estimation using a MultiPose model
@@ -115,6 +127,10 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                                 person.bounding_box.end_point.y
                             ]
                             writer.writerow([day_num, cam_num, img_id, pid] + bbox + keypts)
+                    
+                    latency += time.time() - init_time
+        latency /= total_frames # Normalize by number of frames
+    print(f"Average Latency: {latency:%.2f}")
 
 def main():
     parser = argparse.ArgumentParser(
