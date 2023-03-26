@@ -18,9 +18,9 @@ def run(tracker_type: str) -> None:
     tracker_type: Type of Tracker('keypoint' or 'bounding_box').
   """
 
-  IMG_DIR = "mvor/day1/cam1/"
+  IMG_DIR = "mvor/day3/cam1/"
 
-  # Initialize the pose estimator selected.
+  # Initialize the pose estimator selected
   pose_detector = MoveNetMultiPose('movenet_multipose', tracker_type)
 
   # Variables to calculate FPS
@@ -49,7 +49,7 @@ def run(tracker_type: str) -> None:
     image = cv2.imread(frame)
     counter += 1
     # Flip across y axis (?)
-    image = cv2.flip(image, 1)
+    # image = cv2.flip(image, 1)
 
     # Run pose estimation using a MultiPose model.
     list_persons = pose_detector.detect(image)

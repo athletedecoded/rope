@@ -1,3 +1,6 @@
+##############################
+#   TF-LITE UTILITY FXNS
+##############################
 """Utility functions to display the pose detection results."""
 
 import math
@@ -152,3 +155,85 @@ def keep_aspect_ratio_resizer(
   image = cv2.copyMakeBorder(image, padding_top, padding_bottom, padding_left,
                              padding_right, cv2.BORDER_CONSTANT)
   return image, (target_height, target_width)
+
+
+##############################
+#   MVOR UTILITY FXNS
+#   
+##############################
+
+def coco_to_camma_kps(coco_kps):
+    """
+    convert coco keypoints(17) to camma-keypoints(10)
+    :param coco_kps: 17 keypoints of coco
+    :return: camma_keypoints
+    """
+    num_keypoints = 10
+    camma_kps = np.zeros((num_keypoints, 3))
+
+    nose = coco_kps[0, :]
+    leye = coco_kps[1, :]
+    reye = coco_kps[2, :]
+    lear = coco_kps[3, :]
+    rear = coco_kps[4, :]
+
+    if leye[-1] > 0 and reye[-1] > 0:
+        camma_kps[0, :] = ((leye + reye) / 2).reshape(1, 3)
+    elif lear[-1] > 0 and rear[-1] > 0:
+        camma_kps[0, :] = ((lear + rear) / 2).reshape(1, 3)
+    elif nose[-1] > 0:
+        camma_kps[0, :] = nose.reshape(1, 3)
+    elif reye[-1] > 0:
+        camma_kps[0, :] = reye.reshape(1, 3)
+    elif leye[-1] > 0:
+        camma_kps[0, :] = leye.reshape(1, 3)
+    elif rear[-1] > 0:
+        camma_kps[0, :] = rear.reshape(1, 3)
+    elif lear[-1] > 0:
+        camma_kps[0, :] = lear.reshape(1, 3)
+    else:
+        camma_kps[0, :] = np.array([0, 0, 0]).reshape(1, 3)
+
+    lshoulder = coco_kps[5, :]
+    rshoulder = coco_kps[6, :]
+    lhip = coco_kps[11, :]
+    rhip = coco_kps[12, :]
+    lelbow = coco_kps[7, :]
+    relbow = coco_kps[8, :]
+    lwrist = coco_kps[9, :]
+    rwrist = coco_kps[10, :]
+
+    if lshoulder[-1] > 0 and rshoulder[-1] > 0:
+        camma_kps[1, :] = ((lshoulder + rshoulder) / 2).reshape(1, 3)
+    elif rshoulder[-1] > 0:
+        camma_kps[1, :] = rshoulder.reshape(1, 3)
+    elif lshoulder[-1] > 0:
+        camma_kps[1, :] = lshoulder.reshape(1, 3)
+    else:
+        camma_kps[1, :] = np.array([0, 0, 0]).reshape(1, 3)
+
+    if lshoulder[-1] > 0:
+        camma_kps[2, :] = lshoulder.reshape(1, 3)
+
+    if rshoulder[-1] > 0:
+        camma_kps[3, :] = rshoulder.reshape(1, 3)
+
+    if lhip[-1] > 0:
+        camma_kps[4, :] = lhip.reshape(1, 3)
+
+    if rhip[-1] > 0:
+        camma_kps[5, :] = rhip.reshape(1, 3)
+
+    if lelbow[-1] > 0:
+        camma_kps[6, :] = lelbow.reshape(1, 3)
+
+    if relbow[-1] > 0:
+        camma_kps[7, :] = relbow.reshape(1, 3)
+
+    if lwrist[-1] > 0:
+        camma_kps[8, :] = lwrist.reshape(1, 3)
+
+    if rwrist[-1] > 0:
+        camma_kps[9, :] = rwrist.reshape(1, 3)
+
+    return camma_kps

@@ -13,4 +13,5 @@ mvor.tar.gz
 my_venv
 
 # predictions
-predictions.csv
+predictions.*
+openpose_*

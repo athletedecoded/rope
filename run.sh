@@ -25,4 +25,6 @@ if [ ! -f "$FILE" ]; then
     -o ${FILE}
 fi
 
+python3 inference.py
+
 echo -e "MoveNet MultiPose model downloaded to ${DATA_DIR}"
