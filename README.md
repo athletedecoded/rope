@@ -26,6 +26,8 @@ ROPE
 ## Install
 
 ```
+python3 -m venv ~/.venv
+source ~/.venv/bin/activate
 sh setup.sh
 ```
 ## Run the pose estimation sample with visualisation
@@ -37,11 +39,35 @@ python3 visualizer.py --tracker <TRACKER>
 
 * `<TRACKER>` is pose tracker to use. Options: `bounding_box` (default) or `keypoint`
 
-## Run the pose estimation to generate annotation file
+## Inference
 
 ```
 python3 inference.py --tracker <TRACKER> --threshold <DETECTION_THRESHOLD>
 ```
 
 * `<TRACKER>` is pose tracker to use. Options: `bounding_box` (default) or `keypoint`
-* `<DETECTION_THRESHOLD>` is threshold value (float) for all keypts to qualify as detected pose: 0 < threshold < 1.0
+* `<DETECTION_THRESHOLD>` is threshold value (float) for all keypts to qualify as detected pose (default = 0.0): 0 < threshold < 1.0
+
+## Evaluation
+
+**Test original MVOR OpenPose results**
+
+```
+# MVOR x OpenPose bounding box detections
+wget https://raw.githubusercontent.com/CAMMA-public/MVOR/799ec8c709624c6bbc8b6c88accb2192e15a88a6/detections_results/openpose_bbox.json
+# MVOR x OpenPose keypoint detections
+wget https://raw.githubusercontent.com/CAMMA-public/MVOR/799ec8c709624c6bbc8b6c88accb2192e15a88a6/detections_results/openpose_kps.json
+# Run AP bounding box evaluation. Requires pycocotools. Run "pip install pycocotools" if not installed
+python3 eval/ap.py --gt mvor/annotations.json --dt openpose_bbox.json
+# Run PCK evaluation
+python3 eval/pck.py --gt mvor/annotations.json --dt openpose_kps.json
+```
+
+**To evaluate MoveNet predictions**
+
+```
+# Run AP bounding box evaluation. Requires pycocotools. Run "pip install pycocotools" if not installed
+python3 eval/ap.py --gt mvor/annotations.json --dt predictions.json
+# Run PCK evaluation
+python3 eval/pck.py --gt mvor/annotations.json --dt predictions.json
+```
