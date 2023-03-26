@@ -130,7 +130,7 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                     
                     latency += time.time() - init_time
         latency /= total_frames # Normalize by number of frames
-    print(f"Average Latency: {latency:%.2f}")
+    print(f"Average Latency: {latency:.2f}")
 
 def main():
     parser = argparse.ArgumentParser(
