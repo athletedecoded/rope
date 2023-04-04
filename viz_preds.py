@@ -1,13 +1,9 @@
 import argparse
-import logging
-import sys
 import os
-import time
 import json
 
 import cv2
 import glob
-import utils
 
 CAMMA_SKELETON = [
   [0, 1], 
@@ -22,23 +18,27 @@ CAMMA_SKELETON = [
   [4, 5]
 ]
 
-def draw_person(image, person, cmap):
+def draw_person(image, person, cmap, detection_threshold = 0.1):
     """
     image: np image array
     person: rope formatted person instance
     cmap: colour map [keypoints, edges]
+    detection_threshold: minimum confidence score to include keypoint
     """
     kypt_color, edge_color = cmap
     # Draw all the landmarks
     kypts = [person['keypoints'][i:i+3] for i in range(0, len(person['keypoints']), 3)]
-    for pt in kypts:
-        x,y,score = int(pt[0]), int(pt[1]), pt[2]
-        cv2.circle(image, (x,y), 2, kypt_color, 4)
-    # Draw the edges
-    for edge in CAMMA_SKELETON:
-        x1y1 = (int(kypts[edge[0]][0]), int(kypts[edge[0]][1]))
-        x2y2 = (int(kypts[edge[1]][0]), int(kypts[edge[1]][1]))
-        cv2.line(image, x1y1, x2y2, edge_color, 2)
+    # Draw skeleton if all keypoints detected above threshold
+    if min([score for [x,y,score] in kypts]) > detection_threshold:
+        for pt in kypts:
+            x,y,score = int(pt[0]), int(pt[1]), pt[2]
+            if score > detection_threshold:
+                cv2.circle(image, (x,y), 2, kypt_color, 4)
+        # Draw the edges
+        for edge in CAMMA_SKELETON:
+            x1y1 = (int(kypts[edge[0]][0]), int(kypts[edge[0]][1]))
+            x2y2 = (int(kypts[edge[1]][0]), int(kypts[edge[1]][1]))
+            cv2.line(image, x1y1, x2y2, edge_color, 2)
     # Draw the bbox
     start_point = (int(person['bbox'][0]),int(person['bbox'][1]))
     end_point = (int(person['bbox'][0] + person['bbox'][2]), int(person['bbox'][1] + person['bbox'][3]))
@@ -78,29 +78,28 @@ def visualize_preds(annots_path, preds_path, day, cam):
     cv2.namedWindow("ROPE", cv2.WINDOW_NORMAL)
 
     for frame in files:
-        print("frame", frame)
         image = cv2.imread(frame)
 
         img_name = frame.split('/')[-1]
         img_num, ext = img_name.split('.')
         img_id = f'{day}00{cam}0{img_num}'
-        print(img_name, img_num, img_id)
+        print(f'Image: {img_id}')
 
         # If prediction exists for image, plot data
         if img_id in preds:
             img_preds = preds[img_id]
-            # Yellow keypoints, green edges
-            cmap = [(0,255,255),(0,255,0)]
+            # red keypoints, green edges
+            cmap = [(0,0,255),(0,255,0)]
             # For each person
             for person in img_preds:
                 image = draw_person(image, person, cmap)
         # If gt_annot exists for the image, plot data
         if img_id in gt_annots:
             img_gt = gt_annots[img_id]
-            # red keypoints, black edges
-            cmap = [(0,0,255),(255,255,255)]
+            # white keypoints, yellow edges
+            cmap = [(255,255,255),(0,255,255)]
             # For each person
-            for person in img_preds:
+            for person in img_gt:
                 image = draw_person(image, person, cmap)
         # Stop the program if the ESC key is pressed else toggle on key
         key = cv2.waitKey(0)
@@ -149,32 +148,3 @@ def main():
 
 if __name__ == '__main__':
   main()
-
-
-
- #     # Plot prediction info
-    #     for person in img_preds
-
-    #     # Draw all the landmarks
-    #     for i in range(len(keypoints)):
-    #         if keypoints[i].score >= keypoint_threshold:
-    #         cv2.circle(image, keypoints[i].coordinate, 2, keypoint_color, 4)
-
-    # # Draw all the edges
-    # for edge_pair, edge_color in KEYPOINT_EDGE_INDS_TO_COLOR.items():
-    #   if (keypoints[edge_pair[0]].score > keypoint_threshold and
-    #       keypoints[edge_pair[1]].score > keypoint_threshold):
-    #     cv2.line(image, keypoints[edge_pair[0]].coordinate,
-    #              keypoints[edge_pair[1]].coordinate, edge_color, 2)
-
-    # # Draw bounding_box with multipose
-    # if bounding_box is not None:
-    #   start_point = bounding_box.start_point
-    #   end_point = bounding_box.end_point
-    #   cv2.rectangle(image, start_point, end_point, person_color, 2)
-    #   # Draw id text when tracker is enabled for MoveNet MultiPose model.
-    #   # (id = None when using single pose model or when tracker is None)
-    #   if person.id:
-    #     id_text = 'id = ' + str(person.id)
-    #     cv2.putText(image, id_text, start_point, cv2.FONT_HERSHEY_PLAIN, 1,
-    #                 (0, 0, 255), 1)

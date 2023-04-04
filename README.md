@@ -107,14 +107,9 @@ python3 viz_mvor.py \
 ```
 
 
-**Download MVOR Ground Truth Annotations**
+**Visualize ROPE predictions vs MVOR ground truth (CAMMA Format)**
 
 ```
-
-```
-
-**Create ROPE Formatted Ground Truth JSON**
-
-```
-
+python viz_preds.py --annots <path_to_rope_gt> --preds <path_to_rope_preds> --day <dam_num> --cam <cam_num>
+# ie. python viz_preds.py --annots mvor/rope_gt.json --preds predictions.json --day 1 --cam 1
 ```
