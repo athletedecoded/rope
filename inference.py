@@ -33,7 +33,7 @@ def run(tracker_type: str, detection_threshold: float) -> None:
     pose_detector = MoveNetMultiPose('movenet_multipose', tracker_type)
 
     # Write predictions and bbox files in json format 
-    kpts_preds = []
+    preds = {}
     for day_num in range(1, num_days + 1):
         print(f'Day: {day_num}')
         for cam_num in range(1, num_cams + 1):
@@ -62,6 +62,7 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                         for bodypart in person.keypoints:
                             raw_kpts.append([bodypart.coordinate.x, bodypart.coordinate.y, bodypart.score])
                         np_kpts = np.array(raw_kpts)
+                        test = coco_to_camma_kps(np_kpts)
                         camma_kpts = [float(_a) for _a in coco_to_camma_kps(np_kpts).reshape(-1).flatten().tolist()]
                         coco_kpts = [float(_a) for _a in np_kpts.reshape(-1).flatten().tolist()]
                         # Extract bounding box w format: [x1, x2, w, h]
@@ -73,9 +74,10 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                         ]
                         # Extract score
                         coco_score = person.score
-                        # Write kpts_preds data
-                        kpts_preds.append({
-                            "image_id": int(img_id),
+                        # Check if img_id key exists in preds
+                        if img_id in preds:
+                            # append new person data
+                            preds[img_id].append({
                             "person_id": int(pid),
                             "category_id": "1",
                             "bbox": bbox, 
@@ -83,12 +85,21 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                             "coco_keypoints":coco_kpts,
                             "score": float(coco_score)
                         })
+                        else:
+                            preds[img_id] = [{
+                            "person_id": int(pid),
+                            "category_id": "1",
+                            "bbox": bbox, 
+                            "keypoints":camma_kpts,
+                            "coco_keypoints":coco_kpts,
+                            "score": float(coco_score)
+                        }]
                 latency += time.time() - init_time
     latency /= total_frames # Normalize by number of frames
     print(f"Average Latency: {latency:.2f}")
     print("Writing result to ./predictions.json\n")    
     with open("predictions.json", "w") as f:
-        json.dump(kpts_preds, f)
+        json.dump(preds, f)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -102,7 +113,7 @@ def main():
             '--threshold',
             help='Detection threshold for keypoints.',
             required=False,
-            default='0.0')
+            default='0.1')
     
     args = parser.parse_args()
 

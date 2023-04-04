@@ -7,11 +7,24 @@ Adapted from [MoveNet on Pi example](https://github.com/tensorflow/examples/tree
     *   Input: An image
     *   Output: A list of keypoint coordinates and confidence score.
 
-## MVOR Dataset
+## Original MVOR Dataset & Annotations
 
-Download and unzip MVOR datatset into root i.e.
+```
+# Images
+wget https://s3.unistra.fr/camma_public/datasets/mvor/camma_mvor_dataset.zip
+unzip -q camma_mvor_dataset.zip && rm camma_mvor_dataset.zip
+
+# Annotations
+cd camma_mvor_dataset
+wget https://raw.githubusercontent.com/CAMMA-public/MVOR/master/annotations/camma_mvor_2018.json
+```
+
+## Modified ROPE MVOR Dataset
+
+1. Download and unzip modified MVOR datatset into root i.e.
 ```
 ROPE
+|- eval
 |- ml
    |...
 |- mvor
@@ -20,7 +33,12 @@ ROPE
     |- day4
     |- annotations.json
 ...
+```
 
+2. Generate ROPE formatted annotations `rope_gt.json`
+
+```
+python convert_gt.py --annot_path ./camma_mvor_dataset/camma_mvor_2018.json --out_dir mvor
 ```
 
 ## Install
@@ -30,14 +48,6 @@ python3 -m venv ~/.venv
 source ~/.venv/bin/activate
 sh setup.sh
 ```
-## Run the pose estimation sample with visualisation
-
-```
-# Set IMG_DIR line 21
-python3 visualizer.py --tracker <TRACKER>
-```
-
-* `<TRACKER>` is pose tracker to use. Options: `bounding_box` (default) or `keypoint`
 
 ## Inference
 
@@ -46,9 +56,10 @@ python3 inference.py --tracker <TRACKER> --threshold <DETECTION_THRESHOLD>
 ```
 
 * `<TRACKER>` is pose tracker to use. Options: `bounding_box` (default) or `keypoint`
-* `<DETECTION_THRESHOLD>` is threshold value (float) for all keypts to qualify as detected pose (default = 0.0): 0 < threshold < 1.0
+* `<DETECTION_THRESHOLD>` is threshold value (float) for all keypts to qualify as detected pose (default = 0.1: 0 < threshold < 1.0
 
 ## Evaluation
+
 
 **Test original MVOR OpenPose results**
 
@@ -70,4 +81,40 @@ python3 eval/pck.py --gt mvor/annotations.json --dt openpose_kps.json
 python3 eval/ap.py --gt mvor/annotations.json --dt predictions.json
 # Run PCK evaluation
 python3 eval/pck.py --gt mvor/annotations.json --dt predictions.json
+```
+
+## Visualization
+
+**Visualize IRT MoveNet Predictions (COCO Format)**
+
+```
+# Set IMG_DIR line 21
+python3 viz_movenet.py --tracker <TRACKER>
+```
+
+* `<TRACKER>` is pose tracker to use. Options: `bounding_box` (default) or `keypoint`
+
+**Visualize MVOR ground truth annotations (CAMMA Format)**
+
+```
+# Requires original camma_mvor_dataset and annotations
+
+python3 viz_mvor.py \
+       --inp_json camma_mvor_dataset/camma_mvor_2018.json \
+       --img_dir camma_mvor_dataset \
+       --show_ann true \
+       --viz_2D true
+```
+
+
+**Download MVOR Ground Truth Annotations**
+
+```
+
+```
+
+**Create ROPE Formatted Ground Truth JSON**
+
+```
+
 ```

@@ -1,6 +1,7 @@
 # Dataset
-/mvor
+mvor
 mvor.tar.gz
+camma_mvor_dataset
 
 # Models
 *.tflite
