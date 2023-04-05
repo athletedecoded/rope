@@ -20,7 +20,7 @@ def run(tracker_type: str) -> None:
 
   IMG_DIR = "mvor/day1/cam1/"
 
-  # Initialize the pose estimator selected.
+  # Initialize the pose estimator selected
   pose_detector = MoveNetMultiPose('movenet_multipose', tracker_type)
 
   # Variables to calculate FPS
@@ -49,7 +49,7 @@ def run(tracker_type: str) -> None:
     image = cv2.imread(frame)
     counter += 1
     # Flip across y axis (?)
-    image = cv2.flip(image, 1)
+    # image = cv2.flip(image, 1)
 
     # Run pose estimation using a MultiPose model.
     list_persons = pose_detector.detect(image)
@@ -69,10 +69,12 @@ def run(tracker_type: str) -> None:
     cv2.putText(image, fps_text, text_location, cv2.FONT_HERSHEY_PLAIN,
                 font_size, text_color, font_thickness)
 
-    # Stop the program if the ESC key is pressed.
-    if cv2.waitKey(1) == 27:
+    # Stop the program if the ESC key is pressed else toggle on key
+    key = cv2.waitKey(0)
+    if key == 27:
       break
-    cv2.imshow("ROPE", image)
+    else:
+      cv2.imshow("ROPE", image)
 
   cv2.destroyAllWindows()
 
