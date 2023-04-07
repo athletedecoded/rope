@@ -54,15 +54,15 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                 # image = cv2.flip(image, 1)
                 # Run pose estimation using a MultiPose model
                 detect_persons = pose_detector.detect(image)
-                # Init default vals
+                # Init default vals for undetected person
                 bbox_only = 1
-                camma_kpts = None
-                coco_kpts = None
+                camma_kpts = [0]*30 # 10 pts x 3 vals
+                coco_kpts = [0]*51 # 17 pts x 3 vals
                 kpt_score = 0
                 # Write predictions for each person
                 for pid, person in enumerate(detect_persons):
                     min_score = min([keypoint.score for keypoint in person.keypoints])
-                    if min_score > float(detection_threshold):
+                    if min_score >= float(detection_threshold):
                         bbox_only = 0
                         # Extract coco_kpts and convert to camma
                         raw_kpts = []
@@ -84,7 +84,7 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                     # update pid if bbox only
                     if bbox_only:
                         pid = -1
-                    # Write to viz_preds format
+                    # Write to viz_preds format for visualization
                     # Check if img_id key exists in viz_preds
                     if img_id in viz_preds:
                         # append new person data
@@ -107,7 +107,7 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                         "coco_keypoints":coco_kpts,
                         "score": float(kpt_score)
                     }]
-                    # Write to eval_preds format
+                    # Write to eval_preds format for evaluation
                     eval_preds.append({
                         "image_id": int(img_id),
                         "person_id": int(pid),
@@ -140,7 +140,7 @@ def main():
             '--threshold',
             help='Detection threshold for keypoints.',
             required=False,
-            default='0.0')
+            default='0.1')
     
     args = parser.parse_args()
 
