@@ -20,6 +20,7 @@ def run(annot_path, out_dir):
             "person_id": annot['person_id'],
             "category_id": annot['category_id'],
             "bbox": annot['bbox'], 
+            "bbox_only": annot['only_bbox'],
             "keypoints": annot['keypoints']
         })
         else:
@@ -27,6 +28,7 @@ def run(annot_path, out_dir):
             "person_id": annot['person_id'],
             "category_id": annot['category_id'],
             "bbox": annot['bbox'], 
+            "bbox_only": annot['only_bbox'],
             "keypoints": annot['keypoints']
         }]
 

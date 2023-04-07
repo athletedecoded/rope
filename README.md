@@ -69,18 +69,18 @@ wget https://raw.githubusercontent.com/CAMMA-public/MVOR/799ec8c709624c6bbc8b6c8
 # MVOR x OpenPose keypoint detections
 wget https://raw.githubusercontent.com/CAMMA-public/MVOR/799ec8c709624c6bbc8b6c88accb2192e15a88a6/detections_results/openpose_kps.json
 # Run AP bounding box evaluation. Requires pycocotools. Run "pip install pycocotools" if not installed
-python3 eval/ap.py --gt mvor/annotations.json --dt openpose_bbox.json
+python3 eval/ap.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt openpose_bbox.json
 # Run PCK evaluation
-python3 eval/pck.py --gt mvor/annotations.json --dt openpose_kps.json
+python3 eval/pck.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt openpose_kps.json
 ```
 
 **To evaluate MoveNet predictions**
 
 ```
 # Run AP bounding box evaluation. Requires pycocotools. Run "pip install pycocotools" if not installed
-python3 eval/ap.py --gt mvor/annotations.json --dt predictions.json
+python3 eval/ap.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt eval_preds.json
 # Run PCK evaluation
-python3 eval/pck.py --gt mvor/annotations.json --dt predictions.json
+python3 eval/pck.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt eval_preds.json
 ```
 
 ## Visualization
@@ -111,5 +111,5 @@ python3 viz_mvor.py \
 
 ```
 python viz_preds.py --annots <path_to_rope_gt> --preds <path_to_rope_preds> --day <dam_num> --cam <cam_num>
-# ie. python viz_preds.py --annots mvor/rope_gt.json --preds predictions.json --day 1 --cam 1
+# ie. python viz_preds.py --annots mvor/rope_gt.json --preds viz_preds.json --day 1 --cam 1
 ```
