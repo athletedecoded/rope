@@ -14,6 +14,6 @@ camma_mvor_dataset
 my_venv
 
 # predictions
-viz_preds.json
-eval_preds.json
+preds_viz*.json
+preds_eval*.json
 openpose_*

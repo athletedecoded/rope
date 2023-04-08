@@ -78,9 +78,9 @@ python3 eval/pck.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt openpose_k
 
 ```
 # Run AP bounding box evaluation. Requires pycocotools. Run "pip install pycocotools" if not installed
-python3 eval/ap.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt eval_preds.json
+python3 eval/ap.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt preds_eval.json
 # Run PCK evaluation
-python3 eval/pck.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt eval_preds.json
+python3 eval/pck.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt preds_eval.json
 ```
 
 ## Visualization
@@ -111,5 +111,5 @@ python3 viz_mvor.py \
 
 ```
 python viz_preds.py --annots <path_to_rope_gt> --preds <path_to_rope_preds> --day <dam_num> --cam <cam_num>
-# ie. python viz_preds.py --annots mvor/rope_gt.json --preds viz_preds.json --day 1 --cam 1
+# ie. python viz_preds.py --annots mvor/rope_gt.json --preds preds_viz.json --day 1 --cam 1
 ```
