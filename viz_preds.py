@@ -101,6 +101,8 @@ def visualize_preds(annots_path, preds_path, day, cam):
             # For each person
             for person in img_gt:
                 image = draw_person(image, person, cmap)
+        
+        cv2.putText(image, f'{img_id}', (100, 100), cv2.FONT_HERSHEY_DUPLEX, 3, (0, 0, 0), 2, cv2.LINE_4)
         # Stop the program if the ESC key is pressed else toggle on key
         key = cv2.waitKey(0)
         if key == 27:
