@@ -62,7 +62,7 @@ python3 inference_UB50.py --tracker <TRACKER> --threshold <DETECTION_THRESHOLD> 
 **Detection = All COCO Upper Body keypoints > detection threshold**
 
 ```
-python3 inference.py --tracker <TRACKER> --threshold <DETECTION_THRESHOLD>
+python3 inference.py --tracker <TRACKER> --threshold <DETECTION_THRESHOLD> --fps <FPS>
 ```
 
 * `<TRACKER>` is pose tracker to use. Options: `bounding_box` (default) or `keypoint`
