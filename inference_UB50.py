@@ -9,6 +9,7 @@ import cv2
 import glob
 import time
 import numpy as np
+from dataloader import DataLoader
 
 from ml import MoveNetMultiPose
 from utils import coco_to_camma_kps
@@ -53,6 +54,14 @@ def run(tracker_type: str, detection_threshold: float) -> None:
     # Write predictions and bbox files in json format -- eval and viz formats
     preds_eval = []
     preds_viz = {}
+
+    # Initialize dataloader
+    dl = DataLoader()
+    dl.load_images(num_days, num_cams)
+
+    # Counter for the frame number
+    image_index = 0
+
     for day_num in range(1, num_days + 1):
         print(f'Running MVOR inference: day {day_num}')
         for cam_num in range(1, num_cams + 1):
@@ -60,13 +69,14 @@ def run(tracker_type: str, detection_threshold: float) -> None:
             frames = glob.glob(dir_path)
             for frame in frames:
                 img_name = frame.split('/')[-1]
-                img_num, ext = img_name.split('.')
+                img_num, _ = img_name.split('.')
                 img_id = f'{day_num}00{cam_num}0{img_num}'
                 # Record initial time and number of iterations
                 init_time = time.time()
                 total_frames += 1
                 # Load frame as image
-                image = cv2.imread(frame)
+                image = dl.get_item(image_index)
+                image_index += 1
                 # image = cv2.flip(image, 1)
                 # Run pose estimation using a MultiPose model
                 detect_persons = pose_detector.detect(image)
