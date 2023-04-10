@@ -56,16 +56,16 @@ Note this is a simplification of the MVOR paper, which considers a person detect
 across either 3 camera views. However, we are not able to track person id between camera views.
 
 ```
-python3 inference_UB50.py --tracker <TRACKER> --threshold <DETECTION_THRESHOLD> --fps <FPS>
+python3 inference_camma50.py --tracker <TRACKER> --threshold <DETECTION_THRESHOLD> --fps <FPS>
 ```
 
 **Detection = All COCO Upper Body keypoints > detection threshold**
 
 ```
-python3 inference.py --tracker <TRACKER> --threshold <DETECTION_THRESHOLD> --fps <FPS>
+python3 inference_cocoUB.py --tracker <TRACKER> --threshold <DETECTION_THRESHOLD> --fps <FPS>
 ```
 
-* `<TRACKER>` is pose tracker to use. Options: `bounding_box` (default) or `keypoint`
+* `<TRACKER>` is pose tracker to use. Options: `bbox` (default) or `kpt` 
 * `<DETECTION_THRESHOLD>` is threshold value (float) for a keypoint to qualify as detected 
 * `<FPS>` is the ideal FPS that you would like to use. If the value is greater than the maximum fps for the device, this FPS value will be ignored and the maximum will be used.
 (default = 0.1: 0 < threshold < 1.0)
@@ -88,13 +88,13 @@ python3 eval/pck.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt openpose_k
 
 **To evaluate MoveNet predictions**
 
-NB: Requires evaluation formatted prediction file `preds_eval.json` or `preds_eval_UB50.json` generated from `inference.py` or `inference_UB50.py`
+NB: Requires evaluation formatted prediction file `preds_eval_*.json` generated from `inference_cocoUB.py` or `inference_camma50.py`
 
 ```
 # Run AP bounding box evaluation. Requires pycocotools. Run "pip install pycocotools" if not installed
-python3 eval/ap.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt preds_eval.json
+python3 eval/ap.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt preds_eval_camma50_bbox.json
 # Run PCK evaluation
-python3 eval/pck.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt preds_eval.json
+python3 eval/pck.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt preds_eval_camma50_bbox.json
 ```
 
 ## Visualization
@@ -106,7 +106,7 @@ python3 eval/pck.py --gt camma_mvor_dataset/camma_mvor_2018.json --dt preds_eval
 python3 viz_movenet.py --tracker <TRACKER>
 ```
 
-* `<TRACKER>` is pose tracker to use. Options: `bounding_box` (default) or `keypoint`
+* `<TRACKER>` is pose tracker to use. Options: `bbox` (default) or `kpt` 
 
 **Visualize MVOR ground truth annotations (CAMMA Format)**
 
@@ -123,9 +123,9 @@ python3 viz_mvor.py \
 
 **Visualize ROPE predictions vs MVOR ground truth (CAMMA Format)**
 
-NB: Requires visualization formatted prediction file `preds_viz.json` or `preds_viz_UB50` generated from `inference.py` or `inference_UB50.py`
+NB: Requires visualization formatted prediction file `preds_viz_*.json` generated from `inference_cocoUB.py` or `inference_camma50.py`
 
 ```
-python viz_preds.py --annots <path_to_rope_gt> --preds <path_to_preds_viz.json> --day <dam_num> --cam <cam_num>
-# ie. python viz_preds.py --annots mvor/rope_gt.json --preds preds_viz.json --day 1 --cam 1
+python viz_preds.py --annots <path_to_rope_gt> --preds <path_to_preds_viz_*.json> --day <dam_num> --cam <cam_num>
+# ie. python viz_preds.py --annots mvor/rope_gt.json --preds preds_viz_camma50_0.1.json --day 1 --cam 1
 ```

@@ -25,6 +25,6 @@ if [ ! -f "$FILE" ]; then
     -o ${FILE}
 fi
 
-python3 inference.py
+python3 inference_cocoUB.py
 
 echo -e "MoveNet MultiPose model downloaded to ${DATA_DIR}"
