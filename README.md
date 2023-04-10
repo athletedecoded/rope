@@ -56,7 +56,7 @@ Note this is a simplification of the MVOR paper, which considers a person detect
 across either 3 camera views. However, we are not able to track person id between camera views.
 
 ```
-python3 inference_UB50.py --tracker <TRACKER> --threshold <DETECTION_THRESHOLD>
+python3 inference_UB50.py --tracker <TRACKER> --threshold <DETECTION_THRESHOLD> --fps <FPS>
 ```
 
 **Detection = All COCO Upper Body keypoints > detection threshold**
@@ -67,6 +67,7 @@ python3 inference.py --tracker <TRACKER> --threshold <DETECTION_THRESHOLD>
 
 * `<TRACKER>` is pose tracker to use. Options: `bounding_box` (default) or `keypoint`
 * `<DETECTION_THRESHOLD>` is threshold value (float) for a keypoint to qualify as detected 
+* `<FPS>` is the ideal FPS that you would like to use. If the value is greater than the maximum fps for the device, this FPS value will be ignored and the maximum will be used.
 (default = 0.1: 0 < threshold < 1.0)
 
 ## Evaluation
