@@ -31,7 +31,7 @@ class MoveNetMultiPose(object):
 
   def __init__(self,
                model_name: str,
-               tracker_type: str = 'bounding_box',
+               tracker_type: str = 'bbox',
                input_size: int = 256) -> None:
     """Initialize a MultiPose pose estimation model.
 
@@ -62,9 +62,9 @@ class MoveNetMultiPose(object):
 
     # Initialize a tracker.
     config = TrackerConfig()
-    if tracker_type == 'keypoint':
+    if tracker_type == 'kpt':
       self._tracker = KeypointTracker(config)
-    elif tracker_type == 'bounding_box':
+    elif tracker_type == 'bbox':
       self._tracker = BoundingBoxTracker(config)
     else:
       print('ERROR: Tracker type {0} not supported. No tracker will be used.'

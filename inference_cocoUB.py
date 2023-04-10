@@ -14,31 +14,13 @@ from dataloader import DataLoader
 from ml import MoveNetMultiPose
 from utils import coco_to_camma_kps
 
-def check_UB50(person_kpts, detection_threshold):
-    # Extract coco_kpts and convert to camma
-    raw_kpts = []
-    threshold = float(detection_threshold)
-    for bodypart in person_kpts:
-        raw_kpts.append([bodypart.coordinate.x, bodypart.coordinate.y, bodypart.score])
-    np_kpts = np.array(raw_kpts)
-    camma_kpts = [float(_a) for _a in coco_to_camma_kps(np_kpts).reshape(-1).flatten().tolist()]
-    coco_kpts = [float(_a) for _a in np_kpts.reshape(-1).flatten().tolist()]
-    # Check 50% UB keypoints detected ie 50% CAMMA
-    detected_scores = [i for i in camma_kpts[::3] if i > threshold]
-    detected_UB50 = True
-    if len(detected_scores) < 5:
-        detected_UB50 = False
-
-    return detected_UB50, camma_kpts, coco_kpts
-
-
 def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
     """Run inference on images in IMG_DIR.
     Args:
-        tracker_type (str): Type of Tracker('keypoint' or 'bounding_box').
-        detection_threshold (int): Only keep images with all landmark confidence score above this threshold.
-        fps (str): the ideal FPS wanted, but this value will be ignored for fps values greater than the max.
+        tracker_type: Type of Tracker('keypoint' or 'bounding_box').
+        detection_threshold: Only keep images with all landmark confidence score above this threshold.
     """
+    print(f'Running ROPE inference (COCO UB) -- tracker: {tracker_type}, detection threshold: {detection_threshold}') 
 
     # Define Variables
     num_days = 4
@@ -66,7 +48,6 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
     image_index = 0
 
     for day_num in range(1, num_days + 1):
-        print(f'Running MVOR inference: day {day_num}')
         for cam_num in range(1, num_cams + 1):
             dir_path = os.path.join(MVOR_DIR,f'day{day_num}',f'cam{cam_num}','*png')
             frames = glob.glob(dir_path)
@@ -75,7 +56,7 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
                 init_time = time.time()
                 total_frames += 1
                 img_name = frame.split('/')[-1]
-                img_num, _ = img_name.split('.')
+                img_num, ext = img_name.split('.')
                 img_id = f'{day_num}00{cam_num}0{img_num}'
                 # Load frame as image
                 image = dl.get_item(image_index)
@@ -83,28 +64,34 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
                 # image = cv2.flip(image, 1)
                 # Run pose estimation using a MultiPose model
                 detect_persons = pose_detector.detect(image)
+                # Init default vals for undetected person
+                bbox_only = 1
+                camma_kpts = [0]*30 # 10 pts x 3 vals
+                coco_kpts = [0]*51 # 17 pts x 3 vals
                 # Write predictions for each person
                 for pid, person in enumerate(detect_persons):
-                    # Only annotate keypoints where 50% upper body kpts detected > detection threshold
-                    # Note this is a simplification where the paper considers all 3 cams however 
-                    # we cannot track person id between camera views
-                    bbox_only = 0 # default val
-                    detected_UB50, camma_kpts, coco_kpts = check_UB50(person.keypoints, detection_threshold)
-                    if not detected_UB50:
-                        pid = -1
-                        bbox_only = 1
-                        camma_kpts = [0]*30 # 10 pts x 3 vals
-                        coco_kpts = [0]*51 # 17 pts x 3 vals
-                    # All persons have bbox, score
+                    min_score = min([keypoint.score for keypoint in person.keypoints[:13]])
+                    if min_score >= float(detection_threshold):
+                        bbox_only = 0
+                        # Extract coco_kpts and convert to camma
+                        raw_kpts = []
+                        for bodypart in person.keypoints:
+                            raw_kpts.append([bodypart.coordinate.x, bodypart.coordinate.y, bodypart.score])
+                        np_kpts = np.array(raw_kpts)
+                        camma_kpts = [float(_a) for _a in coco_to_camma_kps(np_kpts).reshape(-1).flatten().tolist()]
+                        coco_kpts = [float(_a) for _a in np_kpts.reshape(-1).flatten().tolist()]
                     # Extract person score
                     person_score = person.score
                     # Extract bounding box w format: [x1, x2, w, h]
                     bbox = [
-                        person.bounding_box.start_point.x,
-                        person.bounding_box.start_point.y,
+                        person.bounding_box.start_point.x, 
+                        person.bounding_box.start_point.y, 
                         person.bounding_box.end_point.x - person.bounding_box.start_point.x,
                         person.bounding_box.end_point.y - person.bounding_box.start_point.y
                     ]
+                    # update pid if bbox only
+                    if bbox_only:
+                        pid = -1
                     # Write to preds_viz format for visualization
                     # Check if img_id key exists in preds_viz
                     if img_id in preds_viz:
@@ -112,7 +99,7 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
                         preds_viz[img_id].append({
                         "person_id": int(pid),
                         "category_id": "1",
-                        "bbox": bbox,
+                        "bbox": bbox, 
                         "bbox_only": bbox_only,
                         "keypoints":camma_kpts,
                         "coco_keypoints":coco_kpts,
@@ -139,19 +126,20 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
                         "coco_keypoints":coco_kpts,
                         "score": float(person_score)
                     })
+                latency += time.time() - init_time
                 # Buffer a frame for some time based on the FPS
                 while time.time() - init_time < 1/fps:
                     pass
-                latency += time.time() - init_time
     latency /= total_frames # Normalize by number of frames
-    print(f"Average Latency: {latency:.3f}")
+    print(f"Average Latency: {latency:.2f}")
     print("Input FPS --> Actual FPS")
     print(f"\t{fps} --> {1/latency:.3f}")
-    print("Writing preds_viz to ./preds_viz_UB50.json\n")    
-    with open("preds_viz_UB50.json", "w") as f:
+    # Write preds
+    print(f"Writing to ./preds_viz_cocoUB_{tracker_type}_{detection_threshold}.json\n")    
+    with open(f"preds_viz_cocoUB_{tracker_type}_{detection_threshold}.json", "w") as f:
         json.dump(preds_viz, f)
-    print("Writing preds_eval to ./preds_eval_UB50.json\n")    
-    with open("preds_eval_UB50.json", "w") as f:
+    print(f"Writing to ./preds_eval_cocoUB_{tracker_type}_{detection_threshold}.json\n")    
+    with open(f"preds_eval_cocoUB_{tracker_type}_{detection_threshold}.json", "w") as f:
         json.dump(preds_eval, f)
 
 def main():
@@ -161,7 +149,7 @@ def main():
             '--tracker',
             help='Type of tracker to track poses across frames.',
             required=False,
-            default='bounding_box')
+            default='bbox')
     parser.add_argument(
             '--threshold',
             help='Detection threshold for keypoints.',
@@ -172,7 +160,7 @@ def main():
             help='Ideal FPS (will be ignored if less than max fps).',
             required=False,
             default='9')
-
+    
     args = parser.parse_args()
 
     run(args.tracker, args.threshold, args.fps)
