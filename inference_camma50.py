@@ -24,7 +24,7 @@ def check_camma50(person_kpts, detection_threshold):
     camma_kpts = [float(_a) for _a in coco_to_camma_kps(np_kpts).reshape(-1).flatten().tolist()]
     coco_kpts = [float(_a) for _a in np_kpts.reshape(-1).flatten().tolist()]
     # Check 50% UB keypoints detected ie 50% CAMMA
-    detected_scores = [i for i in camma_kpts[::3] if i > threshold]
+    detected_scores = [i for i in camma_kpts[2::3] if i > threshold]
     detected_camma50 = True
     if len(detected_scores) < 5:
         detected_camma50 = False
@@ -67,7 +67,6 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
     image_index = 0
 
     for day_num in range(1, num_days + 1):
-        print(f'Running MVOR inference: day {day_num}')
         for cam_num in range(1, num_cams + 1):
             dir_path = os.path.join(MVOR_DIR,f'day{day_num}',f'cam{cam_num}','*png')
             frames = glob.glob(dir_path)
