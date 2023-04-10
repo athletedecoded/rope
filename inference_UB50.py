@@ -13,6 +13,24 @@ import numpy as np
 from ml import MoveNetMultiPose
 from utils import coco_to_camma_kps
 
+def check_UB50(person_kpts, detection_threshold):
+    # Extract coco_kpts and convert to camma
+    raw_kpts = []
+    threshold = float(detection_threshold)
+    for bodypart in person_kpts:
+        raw_kpts.append([bodypart.coordinate.x, bodypart.coordinate.y, bodypart.score])
+    np_kpts = np.array(raw_kpts)
+    camma_kpts = [float(_a) for _a in coco_to_camma_kps(np_kpts).reshape(-1).flatten().tolist()]
+    coco_kpts = [float(_a) for _a in np_kpts.reshape(-1).flatten().tolist()]
+    # Check 50% UB keypoints detected ie 50% CAMMA
+    detected_scores = [i for i in camma_kpts[::3] if i > threshold]
+    detected_UB50 = True
+    if len(detected_scores) < 5:
+        detected_UB50 = False
+
+    return detected_UB50, camma_kpts, coco_kpts
+
+
 def run(tracker_type: str, detection_threshold: float) -> None:
     """Run inference on images in IMG_DIR.
     Args:
@@ -52,22 +70,19 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                 # image = cv2.flip(image, 1)
                 # Run pose estimation using a MultiPose model
                 detect_persons = pose_detector.detect(image)
-                # Init default vals for undetected person
-                bbox_only = 1
-                camma_kpts = [0]*30 # 10 pts x 3 vals
-                coco_kpts = [0]*51 # 17 pts x 3 vals
                 # Write predictions for each person
                 for pid, person in enumerate(detect_persons):
-                    min_score = min([keypoint.score for keypoint in person.keypoints[:13]])
-                    if min_score >= float(detection_threshold):
-                        bbox_only = 0
-                        # Extract coco_kpts and convert to camma
-                        raw_kpts = []
-                        for bodypart in person.keypoints:
-                            raw_kpts.append([bodypart.coordinate.x, bodypart.coordinate.y, bodypart.score])
-                        np_kpts = np.array(raw_kpts)
-                        camma_kpts = [float(_a) for _a in coco_to_camma_kps(np_kpts).reshape(-1).flatten().tolist()]
-                        coco_kpts = [float(_a) for _a in np_kpts.reshape(-1).flatten().tolist()]
+                    # Only annotate keypoints where 50% upper body kpts detected > detection threshold
+                    # Note this is a simplification where the paper considers all 3 cams however 
+                    # we cannot track person id between camera views
+                    bbox_only = 0 # default val
+                    detected_UB50, camma_kpts, coco_kpts = check_UB50(person.keypoints, detection_threshold)
+                    if not detected_UB50:
+                        pid = -1
+                        bbox_only = 1
+                        camma_kpts = [0]*30 # 10 pts x 3 vals
+                        coco_kpts = [0]*51 # 17 pts x 3 vals
+                    # All persons have bbox, score
                     # Extract person score
                     person_score = person.score
                     # Extract bounding box w format: [x1, x2, w, h]
@@ -77,9 +92,6 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                         person.bounding_box.end_point.x - person.bounding_box.start_point.x,
                         person.bounding_box.end_point.y - person.bounding_box.start_point.y
                     ]
-                    # update pid if bbox only
-                    if bbox_only:
-                        pid = -1
                     # Write to preds_viz format for visualization
                     # Check if img_id key exists in preds_viz
                     if img_id in preds_viz:
@@ -117,12 +129,11 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                 latency += time.time() - init_time
     latency /= total_frames # Normalize by number of frames
     print(f"Average Latency: {latency:.2f}")
-
-    print("Writing preds_viz to ./preds_viz.json\n")    
-    with open("preds_viz.json", "w") as f:
+    print("Writing preds_viz to ./preds_viz_UB50.json\n")    
+    with open("preds_viz_UB50.json", "w") as f:
         json.dump(preds_viz, f)
-    print("Writing preds_eval to ./preds_eval.json\n")    
-    with open("preds_eval.json", "w") as f:
+    print("Writing preds_eval to ./preds_eval_UB50.json\n")    
+    with open("preds_eval_UB50.json", "w") as f:
         json.dump(preds_eval, f)
 
 def main():

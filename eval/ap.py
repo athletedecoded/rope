@@ -5,7 +5,6 @@ Project: CAMMA-MVOR
 Copyright (c) University of Strasbourg, All Rights Reserved.
 '''
 
-
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 import argparse

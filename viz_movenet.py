@@ -18,7 +18,7 @@ def run(tracker_type: str) -> None:
     tracker_type: Type of Tracker('keypoint' or 'bounding_box').
   """
 
-  IMG_DIR = "mvor/day3/cam1/"
+  IMG_DIR = "mvor/day1/cam1/"
 
   # Initialize the pose estimator selected
   pose_detector = MoveNetMultiPose('movenet_multipose', tracker_type)
@@ -69,10 +69,11 @@ def run(tracker_type: str) -> None:
     cv2.putText(image, fps_text, text_location, cv2.FONT_HERSHEY_PLAIN,
                 font_size, text_color, font_thickness)
 
-    # Stop the program if the ESC key is pressed.
-    if cv2.waitKey(1) == 27:
+    # Stop the program if the ESC key is pressed else toggle on key
+    if cv2.waitKey(0) == 27:
       break
-    cv2.imshow("ROPE", image)
+    else:
+      cv2.imshow("ROPE", image)
 
   cv2.destroyAllWindows()
 

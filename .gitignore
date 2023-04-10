@@ -1,6 +1,7 @@
 # Dataset
-/mvor
+mvor
 mvor.tar.gz
+camma_mvor_dataset
 
 # Models
 *.tflite
@@ -13,5 +14,6 @@ mvor.tar.gz
 my_venv
 
 # predictions
-predictions.*
+preds_viz*.json
+preds_eval*.json
 openpose_*
