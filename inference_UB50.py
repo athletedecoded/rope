@@ -9,6 +9,7 @@ import cv2
 import glob
 import time
 import numpy as np
+from dataloader import DataLoader
 
 from ml import MoveNetMultiPose
 from utils import coco_to_camma_kps
@@ -31,11 +32,12 @@ def check_UB50(person_kpts, detection_threshold):
     return detected_UB50, camma_kpts, coco_kpts
 
 
-def run(tracker_type: str, detection_threshold: float) -> None:
+def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
     """Run inference on images in IMG_DIR.
     Args:
-        tracker_type: Type of Tracker('keypoint' or 'bounding_box').
-        detection_threshold: Only keep images with all landmark confidence score above this threshold.
+        tracker_type (str): Type of Tracker('keypoint' or 'bounding_box').
+        detection_threshold (int): Only keep images with all landmark confidence score above this threshold.
+        fps (str): the ideal FPS wanted, but this value will be ignored for fps values greater than the max.
     """
 
     # Define Variables
@@ -43,6 +45,8 @@ def run(tracker_type: str, detection_threshold: float) -> None:
     num_cams = 3
     latency = 0
     total_frames = 0
+
+    fps = int(fps)
 
     # Preprocess image paths
     MVOR_DIR = os.path.join(os.getcwd(),'mvor')
@@ -53,20 +57,29 @@ def run(tracker_type: str, detection_threshold: float) -> None:
     # Write predictions and bbox files in json format -- eval and viz formats
     preds_eval = []
     preds_viz = {}
+
+    # Initialize dataloader
+    dl = DataLoader()
+    dl.load_images(num_days, num_cams)
+
+    # Counter for the frame number
+    image_index = 0
+
     for day_num in range(1, num_days + 1):
         print(f'Running MVOR inference: day {day_num}')
         for cam_num in range(1, num_cams + 1):
             dir_path = os.path.join(MVOR_DIR,f'day{day_num}',f'cam{cam_num}','*png')
             frames = glob.glob(dir_path)
             for frame in frames:
-                img_name = frame.split('/')[-1]
-                img_num, ext = img_name.split('.')
-                img_id = f'{day_num}00{cam_num}0{img_num}'
                 # Record initial time and number of iterations
                 init_time = time.time()
                 total_frames += 1
+                img_name = frame.split('/')[-1]
+                img_num, _ = img_name.split('.')
+                img_id = f'{day_num}00{cam_num}0{img_num}'
                 # Load frame as image
-                image = cv2.imread(frame)
+                image = dl.get_item(image_index)
+                image_index += 1
                 # image = cv2.flip(image, 1)
                 # Run pose estimation using a MultiPose model
                 detect_persons = pose_detector.detect(image)
@@ -87,8 +100,8 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                     person_score = person.score
                     # Extract bounding box w format: [x1, x2, w, h]
                     bbox = [
-                        person.bounding_box.start_point.x, 
-                        person.bounding_box.start_point.y, 
+                        person.bounding_box.start_point.x,
+                        person.bounding_box.start_point.y,
                         person.bounding_box.end_point.x - person.bounding_box.start_point.x,
                         person.bounding_box.end_point.y - person.bounding_box.start_point.y
                     ]
@@ -99,7 +112,7 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                         preds_viz[img_id].append({
                         "person_id": int(pid),
                         "category_id": "1",
-                        "bbox": bbox, 
+                        "bbox": bbox,
                         "bbox_only": bbox_only,
                         "keypoints":camma_kpts,
                         "coco_keypoints":coco_kpts,
@@ -126,9 +139,14 @@ def run(tracker_type: str, detection_threshold: float) -> None:
                         "coco_keypoints":coco_kpts,
                         "score": float(person_score)
                     })
+                # Buffer a frame for some time based on the FPS
+                while time.time() - init_time < 1/fps:
+                    pass
                 latency += time.time() - init_time
     latency /= total_frames # Normalize by number of frames
-    print(f"Average Latency: {latency:.2f}")
+    print(f"Average Latency: {latency:.3f}")
+    print("Input FPS --> Actual FPS")
+    print(f"\t{fps} --> {1/latency:.3f}")
     print("Writing preds_viz to ./preds_viz_UB50.json\n")    
     with open("preds_viz_UB50.json", "w") as f:
         json.dump(preds_viz, f)
@@ -149,10 +167,15 @@ def main():
             help='Detection threshold for keypoints.',
             required=False,
             default='0.1')
-    
+    parser.add_argument(
+            '--fps',
+            help='Ideal FPS (will be ignored if less than max fps).',
+            required=False,
+            default='9')
+
     args = parser.parse_args()
 
-    run(args.tracker,args.threshold)
+    run(args.tracker, args.threshold, args.fps)
 
 if __name__ == '__main__':
     main()
