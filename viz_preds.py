@@ -27,18 +27,19 @@ def draw_person(image, person, cmap, detection_threshold = 0.1):
     """
     kypt_color, edge_color = cmap
     # Draw all the landmarks
-    kypts = [person['keypoints'][i:i+3] for i in range(0, len(person['keypoints']), 3)]
-    # Draw skeleton if all keypoints detected above threshold
-    if min([score for [x,y,score] in kypts]) > detection_threshold:
-        for pt in kypts:
-            x,y,score = int(pt[0]), int(pt[1]), pt[2]
-            if score > detection_threshold:
-                cv2.circle(image, (x,y), 2, kypt_color, 4)
-        # Draw the edges
-        for edge in CAMMA_SKELETON:
-            x1y1 = (int(kypts[edge[0]][0]), int(kypts[edge[0]][1]))
-            x2y2 = (int(kypts[edge[1]][0]), int(kypts[edge[1]][1]))
-            cv2.line(image, x1y1, x2y2, edge_color, 2)
+    if person['bbox_only'] == 0:
+        kypts = [person['keypoints'][i:i+3] for i in range(0, len(person['keypoints']), 3)]
+        # Draw skeleton if all keypoints detected above threshold
+        if min([score for [x,y,score] in kypts]) > detection_threshold:
+            for pt in kypts:
+                x,y,score = int(pt[0]), int(pt[1]), pt[2]
+                if score > detection_threshold:
+                    cv2.circle(image, (x,y), 2, kypt_color, 4)
+            # Draw the edges
+            for edge in CAMMA_SKELETON:
+                x1y1 = (int(kypts[edge[0]][0]), int(kypts[edge[0]][1]))
+                x2y2 = (int(kypts[edge[1]][0]), int(kypts[edge[1]][1]))
+                cv2.line(image, x1y1, x2y2, edge_color, 2)
     # Draw the bbox
     start_point = (int(person['bbox'][0]),int(person['bbox'][1]))
     end_point = (int(person['bbox'][0] + person['bbox'][2]), int(person['bbox'][1] + person['bbox'][3]))
@@ -48,7 +49,6 @@ def draw_person(image, person, cmap, detection_threshold = 0.1):
 
     return image
     
-
 
 def visualize_preds(annots_path, preds_path, day, cam):
     """
@@ -101,6 +101,8 @@ def visualize_preds(annots_path, preds_path, day, cam):
             # For each person
             for person in img_gt:
                 image = draw_person(image, person, cmap)
+        
+#         cv2.putText(image, f'{img_id}', (50, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 2, cv2.LINE_4)
         # Stop the program if the ESC key is pressed else toggle on key
         key = cv2.waitKey(0)
         if key == 27:

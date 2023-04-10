@@ -70,8 +70,7 @@ def run(tracker_type: str) -> None:
                 font_size, text_color, font_thickness)
 
     # Stop the program if the ESC key is pressed else toggle on key
-    key = cv2.waitKey(0)
-    if key == 27:
+    if cv2.waitKey(0) == 27:
       break
     else:
       cv2.imshow("ROPE", image)

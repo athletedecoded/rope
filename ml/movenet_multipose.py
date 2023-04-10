@@ -73,7 +73,7 @@ class MoveNetMultiPose(object):
 
   def detect(self,
              input_image: np.ndarray,
-             detection_threshold: float = 0.11) -> List[Person]:
+             detection_threshold: float = 0.1) -> List[Person]:
     """Run detection on an input image.
 
     Args:
