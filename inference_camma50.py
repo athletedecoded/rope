@@ -65,6 +65,8 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
 
     # Counter for the frame number
     image_index = 0
+    bbox_counter = 0
+    annot_counter = 0
 
     for day_num in range(1, num_days + 1):
         for cam_num in range(1, num_cams + 1):
@@ -95,6 +97,8 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
                         bbox_only = 1
                         camma_kpts = [0]*30 # 10 pts x 3 vals
                         coco_kpts = [0]*51 # 17 pts x 3 vals
+                    else:
+                        annot_counter += 1
                     # All persons have bbox, score
                     # Extract person score
                     person_score = person.score
@@ -105,6 +109,7 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
                         person.bounding_box.end_point.x - person.bounding_box.start_point.x,
                         person.bounding_box.end_point.y - person.bounding_box.start_point.y
                     ]
+                    bbox_counter += 1
                     # Write to preds_viz format for visualization
                     # Check if img_id key exists in preds_viz
                     if img_id in preds_viz:
@@ -154,6 +159,9 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
     print(f"Writing to ./preds_eval_camma50_{tracker_type}_{detection_threshold}.json\n")    
     with open(f"preds_eval_camma50_{tracker_type}_{detection_threshold}.json", "w") as f:
         json.dump(preds_eval, f)
+
+    print(f"Number of bbox detections = {bbox_counter}")
+    print(f"Number of person detections = {annot_counter}")
 
 def main():
     parser = argparse.ArgumentParser(

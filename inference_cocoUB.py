@@ -46,6 +46,8 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
 
     # Counter for the frame number
     image_index = 0
+    bbox_counter = 0
+    annot_counter = 0
 
     for day_num in range(1, num_days + 1):
         for cam_num in range(1, num_cams + 1):
@@ -72,6 +74,7 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
                 for pid, person in enumerate(detect_persons):
                     min_score = min([keypoint.score for keypoint in person.keypoints[:13]])
                     if min_score >= float(detection_threshold):
+                        annot_counter += 1
                         bbox_only = 0
                         # Extract coco_kpts and convert to camma
                         raw_kpts = []
@@ -89,6 +92,7 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
                         person.bounding_box.end_point.x - person.bounding_box.start_point.x,
                         person.bounding_box.end_point.y - person.bounding_box.start_point.y
                     ]
+                    bbox_counter += 1
                     # update pid if bbox only
                     if bbox_only:
                         pid = -1
@@ -141,6 +145,9 @@ def run(tracker_type: str, detection_threshold: float, fps: str) -> None:
     print(f"Writing to ./preds_eval_cocoUB_{tracker_type}_{detection_threshold}.json\n")    
     with open(f"preds_eval_cocoUB_{tracker_type}_{detection_threshold}.json", "w") as f:
         json.dump(preds_eval, f)
+
+    print(f"Number of bbox detections = {bbox_counter}")
+    print(f"Number of person detections = {annot_counter}")
 
 def main():
     parser = argparse.ArgumentParser(
