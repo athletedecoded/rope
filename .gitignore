@@ -17,3 +17,6 @@ my_venv
 preds_viz*.json
 preds_eval*.json
 openpose_*
+
+# Image outputs
+viz

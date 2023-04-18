@@ -127,5 +127,5 @@ NB: Requires visualization formatted prediction file `preds_viz_*.json` generate
 
 ```
 python viz_preds.py --annots <path_to_rope_gt> --preds <path_to_preds_viz_*.json> --day <dam_num> --cam <cam_num>
-# ie. python viz_preds.py --annots mvor/rope_gt.json --preds preds_viz_camma50_0.1.json --day 1 --cam 1
+# ie. python viz_preds.py --annots mvor/rope_gt.json --preds preds_viz_camma50_bbox_0.1.json --day 1 --cam 1
 ```

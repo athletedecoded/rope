@@ -18,7 +18,7 @@ def run(tracker_type: str) -> None:
     tracker_type: Type of Tracker('keypoint' or 'bounding_box').
   """
 
-  IMG_DIR = "mvor/day1/cam1/"
+  IMG_DIR = "mvor/day1/cam2/"
 
   # Initialize the pose estimator selected
   pose_detector = MoveNetMultiPose('movenet_multipose', tracker_type)
