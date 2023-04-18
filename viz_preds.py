@@ -50,7 +50,7 @@ def draw_person(image, person, cmap, detection_threshold = 0.1):
     return image
     
 
-def visualize_preds(annots_path, preds_path, day, cam):
+def visualize_preds(annots_path, preds_path, day, cam, to_save):
     """
     annots_path: path to MVOR ground truth annotations json [string]
     preds_path: path to MMP predictions json [string]
@@ -67,6 +67,11 @@ def visualize_preds(annots_path, preds_path, day, cam):
     with open(preds_path) as f:
         preds_data = f.read()
     preds = json.loads(preds_data)
+
+    if to_save:
+        out_dir = f"./viz/day{day}/cam{cam}"
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
   
     # Walk images
     dir_path = f'mvor/day{day}/cam{cam}'
@@ -102,7 +107,9 @@ def visualize_preds(annots_path, preds_path, day, cam):
             for person in img_gt:
                 image = draw_person(image, person, cmap)
         
-#         cv2.putText(image, f'{img_id}', (50, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 2, cv2.LINE_4)
+        if to_save:
+            save_path = f"{out_dir}/{img_id}.jpg"
+            cv2.imwrite(save_path, image)
         # Stop the program if the ESC key is pressed else toggle on key
         key = cv2.waitKey(0)
         if key == 27:
@@ -143,10 +150,16 @@ def main():
         default="",
         help='camera number'
     )
+    parser.add_argument(
+        '--save',
+        type=bool,
+        default=False,
+        help='save images'
+    )
 
     args = parser.parse_args()
 
-    visualize_preds(args.annots, args.preds, args.day, args.cam)
+    visualize_preds(args.annots, args.preds, args.day, args.cam, args.save)
 
 if __name__ == '__main__':
   main()
